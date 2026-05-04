@@ -1,9 +1,9 @@
 import pandas as pd
 
 
-# -------------------------------------------------
-# Load raw CASAS TXT dataset
-# -------------------------------------------------
+
+# Load raw CASAS dataset
+
 def load_txt(path: str) -> pd.DataFrame:
     """
     Load raw CASAS dataset (TXT format) into a DataFrame.
@@ -36,9 +36,9 @@ def load_txt(path: str) -> pd.DataFrame:
     return df
 
 
-# -------------------------------------------------
+
 # Create BIO-style activity labels
-# -------------------------------------------------
+
 def create_activity_labels(df: pd.DataFrame) -> pd.DataFrame:
     """
     Convert raw activity annotations into BIO format labels.
@@ -68,9 +68,9 @@ def create_activity_labels(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# -------------------------------------------------
+
 # Create sensor token
-# -------------------------------------------------
+
 def create_sensor_token(df: pd.DataFrame) -> pd.DataFrame:
     """
     Combine sensor and value into a single token.
@@ -80,9 +80,9 @@ def create_sensor_token(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# -------------------------------------------------
-# Full pipeline (IMPORTANT)
-# -------------------------------------------------
+
+# Pipeline 
+
 def process_dataset(path: str) -> pd.DataFrame:
     """
     Full preprocessing pipeline for raw CASAS dataset.
