@@ -60,6 +60,10 @@ def main():
     df = load_data(args, cfg)
     print("\nData loading completed")
 
+    # temporal split
+    df = df.sort_values(cfg.TIMESTAMP_COL).reset_index(drop=True)
+    train_df, val_df, test_df = temporal_split(df, cfg)
+
     # Preprocessing
 
     train_df, encoders = preprocess(train_df, cfg, fit=True)
@@ -70,7 +74,6 @@ def main():
     val_df, _  = preprocess(val_df,  cfg, encoders=encoders, fit=False)
     test_df, _ = preprocess(test_df, cfg, encoders=encoders, fit=False)
     # -----------------------------
-    print("\n[TODO] Preprocessing...")
     print("[TODO] Graph construction...")
     print("[TODO] Sequence building...")
     print("[TODO] Model training...")
