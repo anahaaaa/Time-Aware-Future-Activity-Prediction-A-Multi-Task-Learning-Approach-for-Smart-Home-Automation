@@ -15,9 +15,9 @@ class DataConfig:
     VALUE_COL: str = "Value"
     ACTIVITY_COL: str = "Activity_Label"
 
-    # -----------------------------
+   
     # Model Architecture
-    # -----------------------------
+    
     EMBED_DIM: int = 16
     HIDDEN: int = 128
     HEADS: int = 4
