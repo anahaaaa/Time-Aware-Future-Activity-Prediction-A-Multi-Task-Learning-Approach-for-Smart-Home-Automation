@@ -9,8 +9,10 @@ from src.utils.seed import set_seed
 # Data loading
 from src.data.loader import load_csvs
 from src.data.parser import process_dataset
-
 from src.data.split import temporal_split
+
+from src.features.activity_stats import compute_activity_remaining_stats
+from src.graph.build_graph import build_sensor_graph
 
 def load_data(args, cfg):
     """
@@ -73,6 +75,63 @@ def main():
 
     val_df, _  = preprocess(val_df,  cfg, encoders=encoders, fit=False)
     test_df, _ = preprocess(test_df, cfg, encoders=encoders, fit=False)
+
+    num_sensors = len(encoders[cfg.SENSOR_COL].classes_)
+    class_names = encoders[cfg.ACTIVITY_COL].classes_
+
+    # Detect "other" class
+    other_id = None
+    for candidate in ["other", "o"]:
+        if candidate in class_names:
+            other_id = int(encoders[cfg.ACTIVITY_COL].transform([candidate])[0])
+            print(f"Other class ID: {other_id} ({candidate})")
+            break
+
+    # Graph Construction
+
+    train_edge_index, train_edge_weight = build_sensor_graph(
+        train_df, cfg, num_sensors
+    )
+
+
+    # Build Sequences
+  
+    print("\n Building graph sequences…")
+    
+    train_sequences = build_sequences_global(
+        train_df, cfg, num_sensors, seq_len,
+        edge_index=train_edge_index,
+        edge_weight=train_edge_weight,
+        other_id=other_id,
+        activity_remaining_stats=activity_remaining_stats
+    )
+
+    val_sequences = build_sequences_global(
+        val_df, cfg, num_sensors, seq_len,
+        edge_index=train_edge_index,
+        edge_weight=train_edge_weight,
+        other_id=other_id,
+        activity_remaining_stats=activity_remaining_stats
+    )
+    
+    test_sequences = build_sequences_global(
+        test_df, cfg, num_sensors, seq_len,
+        edge_index=train_edge_index,
+        edge_weight=train_edge_weight,
+        other_id=other_id,
+        activity_remaining_stats=activity_remaining_stats
+    )
+
+    # Filter sequences
+    train_sequences = [s for s in train_sequences if len(s[0]) == seq_len]
+    val_sequences   = [s for s in val_sequences   if len(s[0]) == seq_len]
+    test_sequences  = [s for s in test_sequences  if len(s[0]) == seq_len]
+
+    random.shuffle(train_sequences)
+
+    print(f"Train={len(train_sequences)}, Val={len(val_sequences)}, Test={len(test_sequences)}")
+
+
     # -----------------------------
     print("[TODO] Graph construction...")
     print("[TODO] Sequence building...")
