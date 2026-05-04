@@ -10,6 +10,7 @@ from src.utils.seed import set_seed
 from src.data.loader import load_csvs
 from src.data.parser import process_dataset
 
+from src.data.split import temporal_split
 
 def load_data(args, cfg):
     """
@@ -57,10 +58,17 @@ def main():
     # Load Data
     
     df = load_data(args, cfg)
-
     print("\nData loading completed")
 
+    # Preprocessing
 
+    train_df, encoders = preprocess(train_df, cfg, fit=True)
+
+    # Computing activity duration stats from train set
+    activity_remaining_stats = compute_activity_remaining_stats(train_df, cfg)
+
+    val_df, _  = preprocess(val_df,  cfg, encoders=encoders, fit=False)
+    test_df, _ = preprocess(test_df, cfg, encoders=encoders, fit=False)
     # -----------------------------
     print("\n[TODO] Preprocessing...")
     print("[TODO] Graph construction...")
