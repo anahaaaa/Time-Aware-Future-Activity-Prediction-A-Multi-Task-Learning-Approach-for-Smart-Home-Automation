@@ -1,7 +1,10 @@
 # main.py
-
-import argparse
 import pandas as pd
+import random
+import torch
+import os
+from collections import defaultdict
+from torch.utils.data import DataLoader
 
 from configs.config import DataConfig
 from src.utils.seed import set_seed
@@ -19,6 +22,16 @@ from src.sequences.time_bins import compute_quantile_bins, assign_time_bins
 from src.data.label_utils import remap_classes
 from src.data.collate import collate_fn
 from src.data.dataset import SequenceDataset
+from src.data.preprocess import preprocess
+from src.sequences.build_sequences import build_sequences_global
+from src.models.hybrid_model import ActivityModel
+
+from src.training.training_pipeline import train
+from src.training.evaluate import eval_epoch
+
+from sklearn.metrics import accuracy_score
+from src.utils.visualization import show_results
+from sklearn.metrics import f1_score
 
 
 def load_data(args, cfg):
@@ -46,24 +59,24 @@ def load_data(args, cfg):
     return df
 
 
-def main():
+def main(path, input_type="csv", seq_len=10):
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Using device:", device)
 
     # Arguments
+    # Create args object manually
+    class Args:
+        def __init__(self, path, input_type):
+            self.path = path
+            self.input_type = input_type
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--path", type=str, required=True,
-                        help="Path to dataset (csv glob or txt file)")
-    parser.add_argument("--input_type", type=str, default="csv",
-                        choices=["csv", "txt"])
-    args = parser.parse_args()
+   
+    args = Args(path, input_type)
 
-    
-    # Config + Seed
-  
     cfg = DataConfig()
     set_seed(cfg.SEED)
 
- 
     # Load Data
     
     df = load_data(args, cfg)
@@ -210,7 +223,52 @@ def main():
     print(f"Parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad):,}")
 
     # Train
+
+    model, history, class_weights = train(
+        model, train_loader, val_loader, cfg,
+        device=device,
+        valid_class_names=valid_class_names,
+        time_bin_edges=TIME_BIN_EDGES
+    )
+
+    # Testing & Evaluation
+    _, _, preds, labels_out, pred_times, true_times, \
+        mae, nmae, time_acc = eval_epoch(
+            model, test_loader, class_weights, TIME_BIN_EDGES, device
+        )
+
+    acc = accuracy_score(labels_out, preds)
+    print("\n Final Test Results")
+    print("="*40)
+    
+    print(f"Test Accuracy : {acc:.3f}")
+    print(f"Macro F1      : {f1_score(labels_out, preds, average='macro'):.3f}")
+    print(f"Weighted F1   : {f1_score(labels_out, preds, average='weighted'):.3f}")
+    
+    print("\nTime Metrics")
+    print(f"MAE           : {mae:.1f} min")
+    print(f"NMAE          : {nmae:.4f}")
+    print(f"Time Accuracy : {time_acc:.3f}")
+
+
+    os.makedirs("outputs", exist_ok=True)
+
+    show_results(
+        y_true=labels_out,
+        y_pred=preds,
+        class_names=valid_class_names,
+        save_path="outputs/confusion_matrix.png"
+    )
+
+    return model, encoders, history
     
 
 if __name__ == "__main__":
-    main()
+
+    CSV_PATH = "data/cairo_labeled.csv"
+
+    model, encoders, history = main(
+        path=CSV_PATH,
+        input_type="csv",
+        seq_len=10
+    )
