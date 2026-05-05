@@ -1,6 +1,6 @@
 # AI System for Predictive Human Activity Modeling
 
-Human Activity Recognition (HAR) in smart environments has traditionally focused on identifying the current activity of a user based on sensor data. However, many real-world applications, such as assisted living, healthcare monitoring, and smart automation—require systems that go beyond recognition and enable anticipation of future actions.
+Human Activity Recognition (HAR) in smart environments has traditionally focused on identifying the current activity of a user based on sensor data. However, many real-world applications, such as assisted living, healthcare monitoring, and smart automation, require systems that go beyond recognition and enable anticipation of future actions.
 
 In a smart home setup, ambient sensors continuously generate event streams reflecting user interactions with the environment. While it is feasible to infer the current activity from these signals, it remains significantly more challenging to:
 
@@ -89,7 +89,7 @@ The system is designed as a fully modular end-to-end pipeline:
 ## Model Architecture
 
 <p align="center">
-  <img src="assets/ModelArchitecture.png" alt="Model Architecture" width="700"/>
+  <img src="assets/ModelArchitecture.png" alt="Model Architecture" width="400"/>
   <br/>
   <em>Figure: Hybrid GNN + BiLSTM architecture for activity and time prediction</em>
 </p>
@@ -156,4 +156,36 @@ The model is evaluated on:
      
 3. Visualization
    - Confusion matrix (normalized)
-Classification report
+   - Classification report
+
+
+### Activity Classification Performance
+
+<p align="center">
+  <img src="outputs/ConfusionMatrix.png" alt="Confusion Matrix" width="400"/>
+  <br/>
+  <em>Figure: Confusion Matrix</em>
+</p>
+
+<p align="center">
+  <img src="outputs/ClassificationReport.png" alt="Classification Report" width="400"/>
+  <br/>
+  <em>Figure: Classification Report</em>
+</p>
+
+<p align="center">
+  <img src="outputs/ActivityMterics.png" alt="Activity Metrics" width="400"/>
+  <br/>
+  <em>Figure: Activity Metrics</em>
+</p>
+
+---
+
+### Time Prediction Performance
+
+<p align="center">
+  <img src="outputs/TimeMetrics.png" alt="Time Metrics" width="400"/>
+  <br/>
+  <em>Figure: Time Metrics</em>
+</p>
+
