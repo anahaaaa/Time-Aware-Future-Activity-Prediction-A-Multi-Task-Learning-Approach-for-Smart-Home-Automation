@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 from torch_geometric.data import Batch
+from src.models.time_head import PerActivityTimeHead
+from src.models.gnn import GraphBlock
 
 
 class ActivityModel(nn.Module):
@@ -75,16 +77,17 @@ class ActivityModel(nn.Module):
     
     # Duration table setup
     def set_duration_table(self, act_time_stats, default_mean):
-        """
-        Initialize duration priors from training statistics.
-        """
         for act_id in range(self.num_classes):
             if act_id in act_time_stats:
                 self.act_duration_table[act_id] = torch.tensor(
-                    act_time_stats[act_id]["mean"]
+                    act_time_stats[act_id]["mean"],
+                    device=self.act_duration_table.device
                 )
             else:
-                self.act_duration_table[act_id] = torch.tensor(default_mean)
+                self.act_duration_table[act_id] = torch.tensor(
+                    default_mean,
+                    device=self.act_duration_table.device
+                )
 
     
     # Dynamic time features
