@@ -47,49 +47,113 @@ To address these challenges, the problem is formulated as a multi-task learning 
 
 The system leverages:
 
-- Graph-based modeling to capture sensor relationships
-- Sequence modeling to learn temporal patterns
-- Discrete time binning to stabilize time prediction
+  - Graph-based modeling to capture sensor relationships
+  - Sequence modeling to learn temporal patterns
+  - Discrete time binning to stabilize time prediction
 
 ## Pipeline
 The system is designed as a fully modular end-to-end pipeline:
 
 1. Data Processing
-  - Load raw sensor logs (CSV / TXT)
-  - Clean and normalize sensor values
-  - Encode categorical variables (sensor IDs, activities)
-  - Generate temporal features:
-      * time gaps (delta_t)
-      * cyclic encoding (hour/day sin-cos)
-      * previous activity context
+    - Load raw sensor logs (CSV / TXT)
+    - Clean and normalize sensor values
+    - Encode categorical variables (sensor IDs, activities)
+    - Generate temporal features:
+        * time gaps (delta_t)
+        * cyclic encoding (hour/day sin-cos)
+        * previous activity context
 2. Graph Construction
-  - Build a sensor interaction graph using transition probabilities
-  - Nodes = sensors
-  - Edges = co-occurrence / transition strength
-  - Graph captures spatial relationships between sensors
+    - Build a sensor interaction graph using transition probabilities
+    - Nodes = sensors
+    - Edges = co-occurrence / transition strength
+    - Graph captures spatial relationships between sensors
 3. Sequence Generation
-  - Convert event stream → sliding window sequences
-  - Each window → graph representation
-  - Target:
-      * next activity label
-      * time until next activity
+    - Convert event stream → sliding window sequences
+    - Each window → graph representation
+    - Target:
+        * next activity label
+        * time until next activity
 4. Time Modeling
-  - Continuous time → quantile-based bins
-  - Solves skewed distribution problem
-  - Enables stable classification-based prediction
+    - Continuous time → quantile-based bins
+    - Solves skewed distribution problem
+    - Enables stable classification-based prediction
 5. Dataset + Dataloader
-  - Custom SequenceDataset
-  - Custom collate_fn for graph sequences
+    - Custom SequenceDataset
+    - Custom collate_fn for graph sequences
 6. Training Pipeline
-  - Two-stage training:
-  - Activity prediction
-  - Time prediction (conditioned on activity)
-  - Class imbalance handling
-  - Learning rate scheduling + early stopping
+    - Two-stage training:
+    - Activity prediction
+    - Time prediction (conditioned on activity)
+    - Class imbalance handling
+    - Learning rate scheduling + early stopping
 ## Model Architecture
 
 <p align="center">
-  <img src="assets/architecture.png" alt="Model Architecture" width="700"/>
+  <img src="assets/ModelArchitecture.png" alt="Model Architecture" width="700"/>
   <br/>
   <em>Figure: Hybrid GNN + BiLSTM architecture for activity and time prediction</em>
 </p>
+
+
+The model combines graph learning + temporal modeling + multi-task prediction.
+
+1. Graph Encoder (GNN)
+    * Uses Graph Attention Network (GAT)
+    * Captures:
+      - sensor relationships
+      - interaction patterns
+  
+    * Enhancements:
+  
+      - Sensor embeddings
+      - Previous activity embeddings
+  
+    *  Output: graph-level embedding per timestep
+
+2. Temporal Model (BiLSTM)
+    * Processes sequence of graph embeddings
+    * Learns:
+      - temporal dependencies
+      - activity transitions
+  
+    * Output: contextual sequence representation
+
+3. Activity Prediction Head
+    * Fully connected layer
+    * Predicts next activity
+    
+4. Time Prediction (Key Innovation)
+    * Instead of a single shared head - Activity-conditioned time prediction
+    * Each activity has its own prediction head
+    * Learns different temporal patterns per activity
+  
+    * Additional signals:
+  
+      - elapsed time
+      - expected duration
+      - dynamic progress
+      
+ 5. Multi-task Learning
+
+    * Simultaneously learns:
+  
+      - Activity classification
+      - Time prediction
+     
+## Results
+
+The model is evaluated on:
+
+1. Activity Prediction
+   - Accuracy
+   - Macro F1
+   - Weighted F1
+     
+2. Time Prediction
+   - Time bin accuracy
+   - Mean Absolute Error (MAE)
+   - Normalized MAE (NMAE)
+     
+3. Visualization
+   - Confusion matrix (normalized)
+Classification report
