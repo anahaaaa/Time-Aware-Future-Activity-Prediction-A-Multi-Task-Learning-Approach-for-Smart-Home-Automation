@@ -1,4 +1,9 @@
-# AI System for Predictive Human Activity Modeling
+# Hybrid GNN + BiLSTM for Predictive Human Activity and Time Modeling
+
+![Python](https://img.shields.io/badge/Python-3.10-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-DeepLearning-red)
+![Status](https://img.shields.io/badge/Status-Complete-green)
+![License](https://img.shields.io/badge/License-MIT-green)
 
 Human Activity Recognition (HAR) in smart environments has traditionally focused on identifying the current activity of a user based on sensor data. However, many real-world applications, such as assisted living, healthcare monitoring, and smart automation, require systems that go beyond recognition and enable anticipation of future actions.
 
@@ -142,6 +147,13 @@ The model combines graph learning + temporal modeling + multi-task prediction.
      
 ## Results
 
+### Key Results
+
+- Activity Accuracy: **~84%**
+- Macro F1 Score: **~0.79**
+- Time Prediction MAE: **~8–10 minutes**
+- Time Bin Accuracy: **~75%**
+
 The model is evaluated on:
 
 1. Activity Prediction
@@ -189,3 +201,83 @@ The model is evaluated on:
   <em>Figure: Time Metrics</em>
 </p>
 
+## Installation
+
+Follow the steps below to set up the project locally.
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+```
+
+### 2. Create a virtual environment
+
+```bash
+python -m venv venv
+source venv/bin/activate      # Mac/Linux
+venv\Scripts\activate         # Windows
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Install PyTorch Geometric
+
+PyTorch Geometric requires a separate installation depending on your system.
+
+CPU version:
+```bash
+pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric \
+-f https://data.pyg.org/whl/torch-2.0.0+cpu.html
+```
+GPU version (example: CUDA 11.8):
+```bash
+pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric \
+-f https://data.pyg.org/whl/torch-2.0.0+cu118.html
+```
+For other CUDA versions, refer to the [official PyTorch Geometric installation guide](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html).
+
+### Verify installation
+
+```bash
+import torch
+import torch_geometric
+
+print(torch.__version__)
+```
+## 📂 Project Structure
+
+```
+project/
+├── src/ # Core source code
+│ ├── models/ # GNN, LSTM, time head
+│ ├── data/ # preprocessing & loaders
+│ ├── training/ # train & evaluation logic
+│ ├── utils/ # helper functions
+│ ├── features/ # feature engineering
+│ ├── sequences/ # sequence building
+│ ├── graph/ # graph construction
+│
+├── data/ # dataset (CSV files)
+├── scripts/ # helper scripts 
+├── configs/ # configuration files
+├── outputs/ # results (metrics, plots)
+├── assets/ # images (architecture diagrams)
+├── streamlit_app/ # demo UI 
+│
+├── main.py # entry point
+├── requirements.txt # dependencies
+├── README.md
+```
+## Usage
+
+Run the training pipeline:
+
+```bash
+python main.py --path data/cairo_labeled.csv --input_type csv
+```
