@@ -149,10 +149,12 @@ The model combines graph learning + temporal modeling + multi-task prediction.
 
 ### Key Results
 
-- Activity Accuracy: **~84%**
-- Macro F1 Score: **~0.79**
-- Time Prediction MAE: **~8–10 minutes**
-- Time Bin Accuracy: **~75%**
+- Activity Accuracy: **~98%**
+- Macro F1 Score: **~0.93**
+- Weighted F1 Score: **~0.98**
+- Time Prediction MAE: **~10-13 minutes**
+- Time NMAE: **0.59**
+- Time Bin Accuracy: **~32%**
 
 The model is evaluated on:
 
