@@ -76,18 +76,25 @@ class ActivityModel(nn.Module):
 
     
     # Duration table setup
-    def set_duration_table(self, act_time_stats, default_mean):
+    def set_duration_table(self, act_time_stats, mean_time=0.0, std_time=1.0):
+        """
+        Set per-activity duration priors using bin-based stats.
+        """
+    
+        device = self.act_duration_table.device
+    
         for act_id in range(self.num_classes):
+    
             if act_id in act_time_stats:
-                self.act_duration_table[act_id] = torch.tensor(
-                    act_time_stats[act_id]["mean"],
-                    device=self.act_duration_table.device
-                )
+                mean_bin = act_time_stats[act_id]["mean"]
+                val = float(mean_bin + 1.0)
             else:
-                self.act_duration_table[act_id] = torch.tensor(
-                    default_mean,
-                    device=self.act_duration_table.device
-                )
+                val = float(mean_time + 1.0)
+    
+            # Optional safety clamp
+            val = max(1.0, min(val, 120.0))
+    
+            self.act_duration_table[act_id] = torch.tensor(val, device=device)
 
     
     # Dynamic time features
