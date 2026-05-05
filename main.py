@@ -14,6 +14,13 @@ from src.data.split import temporal_split
 from src.features.activity_stats import compute_activity_remaining_stats
 from src.graph.build_graph import build_sensor_graph
 
+from src.sequences.time_bins import compute_quantile_bins, assign_time_bins
+
+from src.data.label_utils import remap_classes
+from src.data.collate import collate_fn
+from src.data.dataset import SequenceDataset
+
+
 def load_data(args, cfg):
     """
     Load dataset based on input type.
@@ -131,13 +138,79 @@ def main():
 
     print(f"Train={len(train_sequences)}, Val={len(val_sequences)}, Test={len(test_sequences)}")
 
+    # Time Binning
+    TIME_BIN_EDGES = compute_quantile_bins(
+        train_sequences,
+        n_bins=cfg.NUM_TIME_BINS
+        )
+    train_sequences = assign_time_bins(train_sequences, TIME_BIN_EDGES)
+    val_sequences   = assign_time_bins(val_sequences, TIME_BIN_EDGES)
+    test_sequences  = assign_time_bins(test_sequences, TIME_BIN_EDGES)
+    
+    # Balance Train Set
+    label_groups = defaultdict(list)
+    for item in train_sequences:
+        label_groups[item[1]].append(item)
 
-    # -----------------------------
-    print("[TODO] Graph construction...")
-    print("[TODO] Sequence building...")
-    print("[TODO] Model training...")
-    print("[TODO] Evaluation...")
+    balanced = []
+    for label, samples in label_groups.items():
+        if len(samples) > 2500:
+            samples = random.sample(samples, 2500)
+        balanced.extend(samples)
 
+    random.shuffle(balanced)
+    train_sequences = balanced
+
+    # Class remapping
+    valid_classes     = sorted(set(s[1] for s in train_sequences))
+    class_map         = {c: i for i, c in enumerate(valid_classes)}
+    valid_class_names = [class_names[i] for i in valid_classes]
+
+    train_sequences = remap_classes(train_sequences, class_map)
+    val_sequences   = remap_classes(val_sequences, class_map)
+    test_sequences  = remap_classes(test_sequences, class_map)
+
+    num_classes = len(valid_classes)
+
+    print(f"\nFinal classes: {num_classes}")
+
+    # Data Loaders
+    train_loader = DataLoader(
+        SequenceDataset(train_sequences),
+        batch_size=cfg.BATCH_SIZE,
+        shuffle=True,
+        collate_fn=collate_fn
+    )
+
+    val_loader = DataLoader(
+        SequenceDataset(val_sequences),
+        batch_size=cfg.BATCH_SIZE,
+        shuffle=False,
+        collate_fn=collate_fn
+    )
+
+    test_loader = DataLoader(
+        SequenceDataset(test_sequences),
+        batch_size=cfg.BATCH_SIZE,
+        shuffle=False,
+        collate_fn=collate_fn
+    )
+
+    # Build Model
+    model = ActivityModel(
+        num_sensors=num_sensors,
+        num_classes=num_classes,
+        embed_dim=cfg.EMBED_DIM,
+        hidden=cfg.HIDDEN,
+        heads=cfg.HEADS,
+        dropout=cfg.DROPOUT,
+        num_time_bins=cfg.NUM_TIME_BINS,
+    )
+
+    print(f"Parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad):,}")
+
+    # Train
+    
 
 if __name__ == "__main__":
     main()
